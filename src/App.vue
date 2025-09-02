@@ -1,24 +1,47 @@
 <script setup>
 import { onMounted } from 'vue'
+import NavBar from '@/components/NavBar.vue'
+import AppFooter from '@/components/AppFooter.vue'
 
 onMounted(() => {
+  // Cargar Bootstrap CSS
+  const bootstrapLink = document.createElement('link')
+  bootstrapLink.rel = 'stylesheet'
+  bootstrapLink.href = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css'
+  document.head.appendChild(bootstrapLink)
+
   // Cargar Bootstrap Icons CSS
   const iconsLink = document.createElement('link')
   iconsLink.rel = 'stylesheet'
   iconsLink.href = 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css'
   document.head.appendChild(iconsLink)
-  
+
   // Cargar Google Fonts - Roboto y Roboto Mono
   const fontsLink = document.createElement('link')
   fontsLink.rel = 'stylesheet'
   fontsLink.href = 'https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap'
   document.head.appendChild(fontsLink)
+
+  // Cargar Animate.css
+  const animateLink = document.createElement('link')
+  animateLink.rel = 'stylesheet'
+  animateLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css'
+  document.head.appendChild(animateLink)
+
+  // Cargar Bootstrap JS
+  const bootstrapScript = document.createElement('script')
+  bootstrapScript.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js'
+  document.head.appendChild(bootstrapScript)
 })
 </script>
 
 <template>
   <div id="app">
-    <RouterView />
+    <NavBar />
+    <main class="main-content">
+      <RouterView />
+    </main>
+    <AppFooter />
   </div>
 </template>
 
@@ -26,11 +49,11 @@ onMounted(() => {
 /* CSS Variables - Color Palette */
 :root {
   --raisin-black: #211a1d;
-  --electric-indigo: #6320ee;
+  --electric-indigo: #4338CA;
   --medium-slate-blue: #8075ff;
   --magnolia: #f8f0fb;
   --ash-gray: #cad5ca;
-  
+
   /* Gradient Variables */
   --gradient-primary: linear-gradient(135deg, var(--electric-indigo), var(--medium-slate-blue));
   --gradient-background: linear-gradient(180deg, var(--magnolia), var(--ash-gray));
@@ -53,6 +76,13 @@ body {
 #app {
   min-height: 100vh;
   background: var(--gradient-background);
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  padding-top: 76px; /* Espacio para el navbar fijo */
 }
 
 /* Typography */
@@ -114,9 +144,9 @@ code, pre, .code {
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #5a1ccc, #7066e6);
+  background: linear-gradient(135deg, #3730A3, #6366F1);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(99, 32, 238, 0.3);
+  box-shadow: 0 8px 25px rgba(67, 56, 202, 0.3);
 }
 
 .btn-outline-primary {
@@ -132,7 +162,7 @@ code, pre, .code {
   border-color: var(--electric-indigo);
   color: white;
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(99, 32, 238, 0.3);
+  box-shadow: 0 8px 25px rgba(67, 56, 202, 0.3);
 }
 
 .btn-outline-secondary {
@@ -182,7 +212,7 @@ code, pre, .code {
 
 .form-control:focus, .form-select:focus {
   border-color: var(--electric-indigo);
-  box-shadow: 0 0 0 0.2rem rgba(99, 32, 238, 0.25);
+  box-shadow: 0 0 0 0.2rem rgba(67, 56, 202, 0.25);
   background: white;
 }
 
@@ -256,13 +286,13 @@ code, pre, .code {
   background: var(--gradient-primary);
   color: white;
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(99, 32, 238, 0.3);
+  box-shadow: 0 4px 15px rgba(67, 56, 202, 0.3);
 }
 
 .page-item.active .page-link {
   background: var(--gradient-primary);
   color: white;
-  box-shadow: 0 4px 15px rgba(99, 32, 238, 0.3);
+  box-shadow: 0 4px 15px rgba(67, 56, 202, 0.3);
 }
 
 .page-item.disabled .page-link {
@@ -319,11 +349,11 @@ code, pre, .code {
     padding-left: 1rem;
     padding-right: 1rem;
   }
-  
+
   .card {
     border-radius: 12px;
   }
-  
+
   .btn {
     border-radius: 8px;
   }
@@ -344,6 +374,6 @@ code, pre, .code {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #5a1ccc, #7066e6);
+  background: linear-gradient(135deg, #3730A3, #6366F1);
 }
 </style>

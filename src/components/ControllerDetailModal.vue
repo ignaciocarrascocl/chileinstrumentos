@@ -9,14 +9,14 @@
           </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        
+
         <div class="modal-body">
           <div class="row">
             <!-- Imagen -->
             <div class="col-md-6 mb-3">
               <div class="text-center">
-                <img 
-                  :src="getImageUrl(controller)" 
+                <img
+                  :src="getImageUrl(controller)"
                   :alt="controller.Model"
                   class="img-fluid rounded shadow-sm"
                   style="max-height: 300px; object-fit: cover;"
@@ -24,7 +24,7 @@
                 >
               </div>
             </div>
-            
+
             <!-- Información detallada -->
             <div class="col-md-6">
               <div class="mb-3">
@@ -115,9 +115,9 @@
               Controles
             </h6>
             <div class="d-flex flex-wrap gap-2">
-              <span 
-                v-for="control in controller.controls" 
-                :key="control" 
+              <span
+                v-for="control in controller.controls"
+                :key="control"
                 class="badge bg-light text-dark border"
               >
                 {{ control }}
@@ -132,9 +132,9 @@
               Conectividad
             </h6>
             <div class="d-flex flex-wrap gap-2">
-              <span 
-                v-for="connection in controller.connectivity" 
-                :key="connection" 
+              <span
+                v-for="connection in controller.connectivity"
+                :key="connection"
                 class="badge bg-info text-dark"
               >
                 {{ connection }}
@@ -149,9 +149,9 @@
               Alimentación
             </h6>
             <div class="d-flex flex-wrap gap-2">
-              <span 
-                v-for="powerType in controller.power" 
-                :key="powerType" 
+              <span
+                v-for="powerType in controller.power"
+                :key="powerType"
                 class="badge bg-warning text-dark"
               >
                 {{ powerType }}
@@ -164,10 +164,10 @@
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
             Cerrar
           </button>
-          <a 
-            v-if="controller['parsed image']" 
-            :href="controller['parsed image']" 
-            target="_blank" 
+          <a
+            v-if="controller['parsed image']"
+            :href="controller['parsed image']"
+            target="_blank"
             class="btn btn-primary"
           >
             <i class="bi bi-box-arrow-up-right me-2"></i>
@@ -193,9 +193,9 @@ defineProps({
 
 // Función para obtener la URL de la imagen
 const getImageUrl = (controller) => {
-  if (controller.ID) {
-    // Usar imágenes locales basadas en el ID
-    return `/downloaded_images/${controller.ID}.jpg`
+  if (controller.image) {
+    // Usar imágenes locales basadas en el campo image
+    return `/downloaded_images/${controller.image}`
   }
   return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2ZmZmZmZiIvPjwvc3ZnPg=='
 }
@@ -208,7 +208,7 @@ const handleImageError = (event) => {
 // Formatear dimensiones
 const formatDimensions = (dimensions) => {
   if (!dimensions || dimensions === 'NA') return 'No especificado'
-  
+
   const parts = dimensions.split(';')
   if (parts.length === 3) {
     return `${parts[0]} × ${parts[1]} × ${parts[2]}`
@@ -284,7 +284,7 @@ const formatDimensions = (dimensions) => {
   .modal-dialog {
     margin: 1rem;
   }
-  
+
   .modal-body {
     padding: 1rem;
   }

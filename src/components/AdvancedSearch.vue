@@ -1,22 +1,21 @@
 <template>
   <div class="advanced-search">
-    <div class="search-input-container position-relative">
-      <div class="input-group">
-        <span class="input-group-text bg-primary text-white border-primary">
+    <!-- Barra de búsqueda principal con Fuse.js -->
+    <div class="search-section mb-4">
+      <div class="input-group input-group-lg">
+        <span class="input-group-text bg-primary text-white">
           <i class="bi bi-search"></i>
         </span>
-        <input 
-          v-model="localSearchQuery"
-          @input="handleInput"
-          @focus="showSuggestions = true"
-          @keydown="handleKeyDown"
-          type="text" 
-          class="form-control border-primary"
-          :placeholder="placeholder"
+        <input
+          v-model="searchQuery"
+          @input="handleSearch"
+          type="text"
+          class="form-control"
+          placeholder="Buscar controladores MIDI por modelo, fabricante, características..."
           autocomplete="off"
         >
-        <button 
-          v-if="localSearchQuery"
+        <button
+          v-if="searchQuery"
           @click="clearSearch"
           class="btn btn-outline-secondary"
           type="button"
@@ -25,73 +24,145 @@
         </button>
       </div>
 
-      <!-- Sugerencias de autocompletado -->
-      <div 
-        v-if="showSuggestions && suggestions.length > 0" 
-        class="suggestions-dropdown position-absolute w-100 mt-1"
-      >
-        <div class="list-group shadow-lg">
+      <!-- Sugerencias de búsqueda -->
+      <div v-if="searchSuggestions.length > 0" class="suggestions-list mt-2">
+        <div class="list-group">
           <button
-            v-for="(suggestion, index) in suggestions"
+            v-for="(suggestion, index) in searchSuggestions.slice(0, 5)"
             :key="index"
-            @click="selectSuggestion(suggestion)"
-            class="list-group-item list-group-item-action d-flex align-items-center"
-            :class="{ active: selectedSuggestionIndex === index }"
-            type="button"
+            @click="applySuggestion(suggestion)"
+            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
           >
-            <i :class="suggestion.icon" class="me-2 text-primary"></i>
-            <div class="flex-grow-1">
-              <div class="fw-semibold">{{ suggestion.title }}</div>
-              <small class="text-muted">{{ suggestion.category }}</small>
+            <div>
+              <strong>{{ suggestion.item.Model }}</strong>
+              <small class="text-muted d-block">{{ suggestion.item['Manufacturer-0'] }}</small>
             </div>
-            <small class="text-muted">{{ suggestion.count }} resultados</small>
+            <span class="badge bg-primary rounded-pill">{{ Math.round((1 - suggestion.score) * 100) }}% match</span>
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Filtros rápidos -->
-    <div class="quick-filters mt-3">
-      <div class="d-flex flex-wrap gap-2">
-        <span class="text-muted me-2">Filtros rápidos:</span>
-        <button
-          v-for="filter in quickFilters"
-          :key="filter.key"
-          @click="applyQuickFilter(filter)"
-          class="btn btn-sm btn-outline-primary quick-filter-btn"
-          :class="{ active: isQuickFilterActive(filter) }"
-        >
-          <i :class="filter.icon" class="me-1"></i>
-          {{ filter.label }}
-        </button>
-      </div>
-    </div>
+    <!-- Filtros Avanzados -->
+    <div class="filters-section">
+      <div class="filters-content">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="d-flex align-items-center gap-2">
+            <span v-if="activeFiltersCount > 0" class="badge bg-info">
+              {{ activeFiltersCount }} filtro{{ activeFiltersCount !== 1 ? 's' : '' }} activo{{ activeFiltersCount !== 1 ? 's' : '' }}
+            </span>
+            <button @click="clearAllFilters" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-arrow-clockwise me-1"></i>
+              Limpiar
+            </button>
+          </div>
+        </div>
 
-    <!-- Búsquedas recientes -->
-    <div v-if="recentSearches.length > 0" class="recent-searches mt-3">
-      <div class="d-flex align-items-center mb-2">
-        <i class="bi bi-clock-history text-muted me-2"></i>
-        <span class="text-muted small">Búsquedas recientes:</span>
-      </div>
-      <div class="d-flex flex-wrap gap-2">
-        <div
-          v-for="(search, index) in recentSearches"
-          :key="index"
-          class="recent-search-item d-flex align-items-center"
-        >
-          <button
-            @click="selectRecentSearch(search)"
-            class="btn btn-sm btn-light recent-search-btn"
-          >
-            {{ search }}
-          </button>
-          <button
-            @click="removeRecentSearch(index)"
-            class="btn btn-sm ms-1 p-0 remove-btn"
-            style="background: none; border: none;"
-          >
-            <i class="bi bi-x text-muted"></i>
-          </button>
+        <div class="row g-4">
+          <!-- Fabricantes -->
+          <div class="col-lg-3 col-md-6">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-building me-1"></i>
+              Fabricantes
+            </label>
+            <MultiSelect
+              v-model="selectedManufacturers"
+              :options="manufacturerOptions"
+              placeholder="Seleccionar fabricantes..."
+              @update:modelValue="updateFilters"
+            />
+          </div>
+
+          <!-- Número de Teclas -->
+          <div class="col-lg-3 col-md-6">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-piano me-1"></i>
+              Número de Teclas
+            </label>
+            <MultiSelect
+              v-model="selectedKeyCounts"
+              :options="keyCountOptions"
+              placeholder="Seleccionar teclas..."
+              @update:modelValue="updateFilters"
+            />
+          </div>
+
+          <!-- Tipo de Teclas -->
+          <div class="col-lg-3 col-md-6">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-keyboard me-1"></i>
+              Tipo de Teclas
+            </label>
+            <MultiSelect
+              v-model="selectedKeyTypes"
+              :options="keyTypeOptions"
+              placeholder="Seleccionar tipos..."
+              @update:modelValue="updateFilters"
+            />
+          </div>
+
+          <!-- Número de Pads -->
+          <div class="col-lg-3 col-md-6">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-grid-3x3 me-1"></i>
+              Número de Pads
+            </label>
+            <MultiSelect
+              v-model="selectedPadCounts"
+              :options="padCountOptions"
+              placeholder="Seleccionar pads..."
+              @update:modelValue="updateFilters"
+            />
+          </div>
+        </div>
+
+        <!-- Rangos -->
+        <div class="row g-4 mt-2">
+          <!-- Rango de Años -->
+          <div class="col-lg-6">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-calendar-range me-1"></i>
+              Rango de Años ({{ minYear }} - {{ maxYear }})
+            </label>
+            <RangeSlider
+              v-model="yearRange"
+              :min="minYear"
+              :max="maxYear"
+              :step="1"
+              @update:modelValue="updateFilters"
+            />
+          </div>
+
+          <!-- Rango de Precios -->
+          <div class="col-lg-6">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-currency-dollar me-1"></i>
+              Rango de Precios (${{ minPrice }} - ${{ maxPrice }})
+            </label>
+            <RangeSlider
+              v-model="priceRange"
+              :min="minPrice"
+              :max="maxPrice"
+              :step="50"
+              @update:modelValue="updateFilters"
+            />
+          </div>
+        </div>
+
+        <!-- Filtros Rápidos -->
+        <div class="mt-4">
+          <label class="form-label fw-semibold">Filtros Rápidos</label>
+          <div class="d-flex flex-wrap gap-2">
+            <button
+              v-for="filter in quickFilters"
+              :key="filter.key"
+              @click="toggleQuickFilter(filter)"
+              class="btn btn-sm"
+              :class="filter.active ? 'btn-primary' : 'btn-outline-primary'"
+            >
+              {{ filter.label }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -99,215 +170,235 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { useLocalStorage } from '@vueuse/core'
+import { ref, computed, watch, onMounted } from 'vue'
+import Fuse from 'fuse.js'
+import { useDebounce } from '@vueuse/core'
+import MultiSelect from './ui/MultiSelect.vue'
+import RangeSlider from './ui/RangeSlider.vue'
 
 const props = defineProps({
-  modelValue: {
-    type: String,
-    default: ''
-  },
-  placeholder: {
-    type: String,
-    default: 'Buscar controladores MIDI...'
-  },
   controllers: {
     type: Array,
     default: () => []
   }
 })
 
-const emit = defineEmits(['update:modelValue', 'quickFilter'])
+const emit = defineEmits(['search', 'filtersChanged'])
 
-const localSearchQuery = ref(props.modelValue)
-const showSuggestions = ref(false)
-const selectedSuggestionIndex = ref(-1)
+// Estados reactivos
+const searchQuery = ref('')
+const selectedManufacturers = ref([])
+const selectedKeyCounts = ref([])
+const selectedKeyTypes = ref([])
+const selectedPadCounts = ref([])
+const yearRange = ref([1980, new Date().getFullYear()])
+const priceRange = ref([0, 5000])
 
-// Almacenar búsquedas recientes en localStorage
-const recentSearches = useLocalStorage('midi-recent-searches', [])
+// Filtros rápidos
+const quickFilters = ref([
+  { key: 'hasKeys', label: 'Con Teclas', active: false },
+  { key: 'hasPads', label: 'Con Pads', active: false },
+  { key: 'mini', label: 'Teclas Mini', active: false },
+  { key: 'weighted', label: 'Teclas Pesadas', active: false },
+  { key: 'hasMidi', label: 'Con MIDI', active: false },
+  { key: 'hasUsb', label: 'Con USB', active: false },
+  { key: 'wireless', label: 'Inalámbrico', active: false },
+  { key: 'battery', label: 'A Batería', active: false },
+  { key: 'transportControls', label: 'Controles de Transporte', active: false },
+  { key: 'modWheel', label: 'Rueda de Modulación', active: false }
+])
 
-// Filtros rápidos predefinidos
-const quickFilters = [
-  { key: 'hasKeys', label: 'Con Teclas', icon: 'bi bi-piano', filter: (c) => c.keys_count && c.keys_count !== 'NA' && c.keys_count > 0 },
-  { key: 'hasPads', label: 'Con Pads', icon: 'bi bi-grid-3x3', filter: (c) => c.pads_count && c.pads_count > 0 },
-  { key: 'mini', label: 'Mini', icon: 'bi bi-phone', filter: (c) => c.keys_type === 'mini' },
-  { key: 'weighted', label: 'Teclas Pesadas', icon: 'bi bi-speedometer2', filter: (c) => c.keys_type?.includes('weighted') },
-  { key: 'usb', label: 'USB', icon: 'bi bi-usb-symbol', filter: (c) => c.connectivity?.includes('USB') },
-  { key: 'wireless', label: 'Inalámbrico', icon: 'bi bi-wifi', filter: (c) => c.connectivity?.includes('Bluetooth') || c.connectivity?.includes('Wireless') }
-]
+// Búsqueda debounced
+const debouncedSearchQuery = useDebounce(searchQuery, 300)
 
-const activeQuickFilters = ref([])
+// Instancia de Fuse.js para búsqueda inteligente
+const fuseOptions = {
+  keys: [
+    { name: 'Model', weight: 0.4 },
+    { name: 'Manufacturer-0', weight: 0.3 },
+    { name: 'Blog-headline-0', weight: 0.2 },
+    { name: 'keys_type', weight: 0.1 }
+  ],
+  threshold: 0.3,
+  includeScore: true,
+  minMatchCharLength: 2
+}
 
-// Generar sugerencias basadas en la búsqueda
-const suggestions = computed(() => {
-  if (!localSearchQuery.value || localSearchQuery.value.length < 2) {
+const fuse = computed(() => new Fuse(props.controllers, fuseOptions))
+
+const searchSuggestions = computed(() => {
+  if (!debouncedSearchQuery.value || debouncedSearchQuery.value.length < 2) {
     return []
   }
 
-  const query = localSearchQuery.value.toLowerCase()
-  const suggestionSet = new Set()
-  const suggestions = []
-
-  // Sugerencias por modelo
-  props.controllers.forEach(controller => {
-    if (controller.Model?.toLowerCase().includes(query)) {
-      const key = `model:${controller.Model}`
-      if (!suggestionSet.has(key)) {
-        suggestionSet.add(key)
-        suggestions.push({
-          title: controller.Model,
-          category: 'Modelo',
-          icon: 'bi bi-music-note-beamed',
-          query: controller.Model,
-          count: props.controllers.filter(c => c.Model?.toLowerCase().includes(query)).length
-        })
-      }
-    }
-  })
-
-  // Sugerencias por fabricante
-  const manufacturers = [...new Set(props.controllers.map(c => c['Manufacturer-0']).filter(Boolean))]
-  manufacturers.forEach(manufacturer => {
-    if (manufacturer.toLowerCase().includes(query)) {
-      const key = `manufacturer:${manufacturer}`
-      if (!suggestionSet.has(key)) {
-        suggestionSet.add(key)
-        suggestions.push({
-          title: manufacturer,
-          category: 'Fabricante',
-          icon: 'bi bi-building',
-          query: manufacturer,
-          count: props.controllers.filter(c => c['Manufacturer-0']?.toLowerCase().includes(query)).length
-        })
-      }
-    }
-  })
-
-  // Sugerencias por tipo de teclas
-  const keyTypes = [...new Set(props.controllers.map(c => c.keys_type).filter(c => c && c !== 'NA'))]
-  keyTypes.forEach(keyType => {
-    if (keyType.toLowerCase().includes(query)) {
-      const key = `keyType:${keyType}`
-      if (!suggestionSet.has(key)) {
-        suggestionSet.add(key)
-        suggestions.push({
-          title: keyType,
-          category: 'Tipo de Teclas',
-          icon: 'bi bi-keyboard',
-          query: keyType,
-          count: props.controllers.filter(c => c.keys_type?.toLowerCase().includes(query)).length
-        })
-      }
-    }
-  })
-
-  return suggestions.slice(0, 8) // Limitar a 8 sugerencias
+  const results = fuse.value.search(debouncedSearchQuery.value)
+  return results.slice(0, 5) // Limitar a 5 sugerencias
 })
 
-// Watchers
-watch(localSearchQuery, (newValue) => {
-  emit('update:modelValue', newValue)
-  selectedSuggestionIndex.value = -1
+// Opciones para los selectores múltiples
+const manufacturerOptions = computed(() => {
+  const manufacturers = [...new Set(
+    props.controllers
+      .map(c => c['Manufacturer-0'])
+      .filter(Boolean)
+  )].sort()
+
+  return manufacturers.map(m => ({ value: m, label: m }))
 })
 
-watch(() => props.modelValue, (newValue) => {
-  localSearchQuery.value = newValue
+const keyCountOptions = computed(() => {
+  const counts = [...new Set(
+    props.controllers
+      .map(c => parseInt(c.keys_count))
+      .filter(c => !isNaN(c) && c > 0)
+  )].sort((a, b) => a - b)
+
+  return counts.map(c => ({ value: c, label: `${c} teclas` }))
 })
+
+const keyTypeOptions = computed(() => {
+  const types = [...new Set(
+    props.controllers
+      .map(c => c.keys_type)
+      .filter(c => c && c !== 'NA')
+  )].sort()
+
+  return types.map(t => ({ value: t, label: t }))
+})
+
+const padCountOptions = computed(() => {
+  const counts = [...new Set(
+    props.controllers
+      .map(c => parseInt(c.pads_count))
+      .filter(c => !isNaN(c) && c > 0)
+  )].sort((a, b) => a - b)
+
+  return counts.map(c => ({ value: c, label: `${c} pads` }))
+})
+
+// Rangos mín/máx
+const minYear = computed(() => {
+  const years = props.controllers
+    .map(c => parseInt(c.Year))
+    .filter(y => !isNaN(y))
+  return years.length > 0 ? Math.min(...years) : 1980
+})
+
+const maxYear = computed(() => {
+  const years = props.controllers
+    .map(c => parseInt(c.Year))
+    .filter(y => !isNaN(y))
+  return years.length > 0 ? Math.max(...years) : new Date().getFullYear()
+})
+
+const minPrice = computed(() => {
+  const parsePrice = (priceStr) => {
+    if (!priceStr || priceStr === 'NA') return NaN
+    // Remover $ y convertir a número
+    const cleaned = priceStr.replace(/[$,]/g, '')
+    return parseFloat(cleaned)
+  }
+
+  const prices = props.controllers
+    .map(c => parsePrice(c['Street Price-0']))
+    .filter(p => !isNaN(p))
+  return prices.length > 0 ? Math.min(...prices) : 0
+})
+
+const maxPrice = computed(() => {
+  const parsePrice = (priceStr) => {
+    if (!priceStr || priceStr === 'NA') return NaN
+    // Remover $ y convertir a número
+    const cleaned = priceStr.replace(/[$,]/g, '')
+    return parseFloat(cleaned)
+  }
+
+  const prices = props.controllers
+    .map(c => parsePrice(c['Street Price-0']))
+    .filter(p => !isNaN(p))
+  return prices.length > 0 ? Math.max(...prices) : 5000
+})
+
+// Contador de filtros activos
+const activeFiltersCount = computed(() => {
+  let count = 0
+  if (selectedManufacturers.value.length > 0) count++
+  if (selectedKeyCounts.value.length > 0) count++
+  if (selectedKeyTypes.value.length > 0) count++
+  if (selectedPadCounts.value.length > 0) count++
+  if (yearRange.value[0] > minYear.value || yearRange.value[1] < maxYear.value) count++
+  if (priceRange.value[0] > minPrice.value || priceRange.value[1] < maxPrice.value) count++
+  count += quickFilters.value.filter(f => f.active).length
+  return count
+})
+
+// Inicializar rangos cuando se cargan los datos
+watch([minYear, maxYear, minPrice, maxPrice], () => {
+  if (yearRange.value[0] === 1980 && yearRange.value[1] === new Date().getFullYear()) {
+    yearRange.value = [minYear.value, maxYear.value]
+  }
+  if (priceRange.value[0] === 0 && priceRange.value[1] === 5000) {
+    priceRange.value = [minPrice.value, maxPrice.value]
+  }
+}, { immediate: true })
 
 // Métodos
-const handleInput = () => {
-  showSuggestions.value = true
-  selectedSuggestionIndex.value = -1
+const handleSearch = () => {
+  emit('search', searchQuery.value)
 }
 
-const handleKeyDown = (event) => {
-  if (!showSuggestions.value || suggestions.value.length === 0) return
-
-  switch (event.key) {
-    case 'ArrowDown':
-      event.preventDefault()
-      selectedSuggestionIndex.value = Math.min(
-        selectedSuggestionIndex.value + 1,
-        suggestions.value.length - 1
-      )
-      break
-    case 'ArrowUp':
-      event.preventDefault()
-      selectedSuggestionIndex.value = Math.max(selectedSuggestionIndex.value - 1, -1)
-      break
-    case 'Enter':
-      event.preventDefault()
-      if (selectedSuggestionIndex.value >= 0) {
-        selectSuggestion(suggestions.value[selectedSuggestionIndex.value])
-      } else if (localSearchQuery.value) {
-        addToRecentSearches(localSearchQuery.value)
-        showSuggestions.value = false
-      }
-      break
-    case 'Escape':
-      showSuggestions.value = false
-      selectedSuggestionIndex.value = -1
-      break
-  }
-}
-
-const selectSuggestion = (suggestion) => {
-  localSearchQuery.value = suggestion.query
-  showSuggestions.value = false
-  selectedSuggestionIndex.value = -1
-  addToRecentSearches(suggestion.query)
+const applySuggestion = (suggestion) => {
+  searchQuery.value = suggestion.item.Model
+  emit('search', searchQuery.value)
 }
 
 const clearSearch = () => {
-  localSearchQuery.value = ''
-  showSuggestions.value = false
+  searchQuery.value = ''
+  emit('search', '')
 }
 
-const addToRecentSearches = (search) => {
-  if (!search || search.length < 2) return
-
-  const searches = recentSearches.value.filter(s => s !== search)
-  searches.unshift(search)
-  recentSearches.value = searches.slice(0, 5) // Mantener solo las últimas 5
+const toggleQuickFilter = (filter) => {
+  filter.active = !filter.active
+  updateFilters()
 }
 
-const selectRecentSearch = (search) => {
-  localSearchQuery.value = search
-  showSuggestions.value = false
-}
+const updateFilters = () => {
+  // Solo enviar rangos si son diferentes a los valores por defecto
+  const isYearRangeDefault = yearRange.value[0] === minYear.value && yearRange.value[1] === maxYear.value
+  const isPriceRangeDefault = priceRange.value[0] === minPrice.value && priceRange.value[1] === maxPrice.value
 
-const removeRecentSearch = (index) => {
-  recentSearches.value.splice(index, 1)
-}
-
-const applyQuickFilter = (filter) => {
-  const index = activeQuickFilters.value.findIndex(f => f.key === filter.key)
-  if (index >= 0) {
-    activeQuickFilters.value.splice(index, 1)
-  } else {
-    activeQuickFilters.value.push(filter)
+  const filters = {
+    search: searchQuery.value,
+    manufacturers: selectedManufacturers.value,
+    keyCounts: selectedKeyCounts.value,
+    keyTypes: selectedKeyTypes.value,
+    padCounts: selectedPadCounts.value,
+    yearRange: isYearRangeDefault ? null : yearRange.value,
+    priceRange: isPriceRangeDefault ? null : priceRange.value,
+    quickFilters: quickFilters.value.filter(f => f.active)
   }
-  
-  emit('quickFilter', activeQuickFilters.value)
+
+  emit('filtersChanged', filters)
 }
 
-const isQuickFilterActive = (filter) => {
-  return activeQuickFilters.value.some(f => f.key === filter.key)
+const clearAllFilters = () => {
+  searchQuery.value = ''
+  selectedManufacturers.value = []
+  selectedKeyCounts.value = []
+  selectedKeyTypes.value = []
+  selectedPadCounts.value = []
+  yearRange.value = [minYear.value, maxYear.value]
+  priceRange.value = [minPrice.value, maxPrice.value]
+  quickFilters.value.forEach(f => f.active = false)
+  updateFilters()
 }
 
-// Cerrar sugerencias cuando se hace clic fuera
-const handleClickOutside = (event) => {
-  if (!event.target.closest('.advanced-search')) {
-    showSuggestions.value = false
-  }
-}
+// Watchers para emitir cambios
+watch([selectedManufacturers, selectedKeyCounts, selectedKeyTypes, selectedPadCounts, yearRange, priceRange], updateFilters, { deep: true })
+watch(debouncedSearchQuery, () => emit('search', searchQuery.value))
 
 onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
+  updateFilters()
 })
 </script>
 
@@ -316,123 +407,126 @@ onUnmounted(() => {
   position: relative;
 }
 
-.suggestions-dropdown {
-  z-index: 1050;
-  max-height: 300px;
-  overflow-y: auto;
+.search-section .input-group {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
 }
 
-.list-group-item {
+.search-section .form-control {
   border: none;
-  padding: 0.75rem 1rem;
-  transition: all 0.3s ease;
-  background: rgba(248, 240, 251, 0.9);
-  color: var(--raisin-black);
+  padding: 12px 16px;
+  font-size: 1.1rem;
 }
 
-.list-group-item:hover,
-.list-group-item.active {
-  background: var(--gradient-primary);
+.search-section .form-control:focus {
+  box-shadow: none;
+  border-color: transparent;
+}
+
+.search-section .input-group-text {
+  border: none;
+  background: linear-gradient(135deg, var(--bs-primary), var(--bs-purple));
+}
+
+.suggestions-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1050;
+}
+
+.suggestions-list .list-group {
+  border-radius: 12px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+  border: none;
+}
+
+.suggestions-list .list-group-item {
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.suggestions-list .list-group-item:hover {
+  background-color: var(--bs-primary);
   color: white;
 }
 
-.quick-filter-btn {
-  transition: all 0.3s ease;
+.filters-section .filters-content {
+  padding: 1rem 0;
+}
+
+.filters-section .card {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.filters-section .card-header {
+  background: linear-gradient(135deg, var(--bs-light), var(--bs-gray-100));
+  border: none;
+  border-radius: 16px 16px 0 0;
+}
+
+.btn-sm {
+  padding: 0.375rem 0.75rem;
+  border-radius: 8px;
+}
+
+.badge {
+  font-size: 0.75rem;
+}
+
+/* Quick filters */
+.filters-section .btn-outline-primary {
   border-radius: 20px;
-  border: 2px solid var(--ash-gray);
-  background: rgba(248, 240, 251, 0.8);
-  color: var(--raisin-black);
-  font-weight: 500;
-}
-
-.quick-filter-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(99, 32, 238, 0.2);
-  background: var(--gradient-primary);
-  color: white;
-  border-color: var(--electric-indigo);
-}
-
-.quick-filter-btn.active {
-  background: var(--gradient-primary);
-  border-color: var(--electric-indigo);
-  color: white;
-  box-shadow: 0 4px 15px rgba(99, 32, 238, 0.3);
-}
-
-.recent-search-btn {
-  border-radius: 15px;
-  font-size: 0.875rem;
   transition: all 0.3s ease;
-  background: rgba(202, 213, 202, 0.3);
-  color: var(--raisin-black);
-  border: 1px solid var(--ash-gray);
-}
-
-.recent-search-btn:hover {
-  background: var(--medium-slate-blue);
-  color: white;
-  transform: translateY(-1px);
-  border-color: var(--medium-slate-blue);
-}
-
-.recent-search-item {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.remove-btn {
-  color: var(--ash-gray);
-  transition: color 0.3s ease;
-}
-
-.remove-btn:hover {
+  border-color: var(--electric-indigo);
   color: var(--electric-indigo);
 }
 
-.search-input-container .form-control:focus {
-  border-color: var(--electric-indigo);
-  box-shadow: 0 0 0 0.2rem rgba(99, 32, 238, 0.25);
-  background: white;
-}
-
-.input-group-text {
-  border-right: none;
-  background: var(--gradient-primary);
+.filters-section .btn-outline-primary:hover,
+.filters-section .btn-primary {
+  transform: translateY(-2px);
+  background-color: var(--electric-indigo);
+  box-shadow: 0 4px 15px rgba(var(--bs-primary-rgb), 0.3);
   color: white;
-  border-color: var(--electric-indigo);
 }
 
-.form-control {
-  border-left: none;
-  border-color: var(--electric-indigo);
-  background: rgba(248, 240, 251, 0.8);
+/* Form controls */
+.form-label {
+  color: var(--bs-gray-700);
+  margin-bottom: 0.5rem;
 }
 
 .form-control:focus {
-  border-left: none;
-  border-color: var(--electric-indigo);
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
 }
 
-.list-group {
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 8px 40px rgba(33, 26, 29, 0.15);
-  backdrop-filter: blur(10px);
+/* Range sliders */
+.form-range::-webkit-slider-thumb {
+  background: var(--bs-primary);
 }
 
+.form-range::-moz-range-thumb {
+  background: var(--bs-primary);
+  border: none;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .quick-filters .d-flex {
-    flex-direction: column;
-    align-items: start;
+  .filters-section .card-body .row > div {
+    margin-bottom: 1rem;
   }
-  
-  .quick-filters .d-flex > .btn {
-    margin-bottom: 0.25rem;
+
+  .search-section .input-group {
+    border-radius: 8px;
   }
-  
-  .quick-filter-btn:hover {
+
+  .filters-section .btn-outline-primary:hover,
+  .filters-section .btn-primary {
     transform: none;
   }
 }
