@@ -36,7 +36,7 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = userData
   }
 
-  const signUp = async (email, password) => {
+  const signUp = async (email, password, displayName) => {
     try {
       loading.value = true
       error.value = null
@@ -44,6 +44,12 @@ export const useAuthStore = defineStore('auth', () => {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            display_name: displayName,
+            full_name: displayName
+          }
+        }
       })
 
       if (signUpError) throw signUpError
@@ -123,11 +129,36 @@ export const useAuthStore = defineStore('auth', () => {
       loading.value = true
       error.value = null
 
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword,
-      })
+      // Check if we have a recovery token in the URL
+      const urlParams = new URLSearchParams(window.location.search)
+      const token = urlParams.get('token')
+      const type = urlParams.get('type')
 
-      if (updateError) throw updateError
+      let updateResult
+
+      if (type === 'recovery' && token) {
+        // Use the recovery token to verify and update password
+        updateResult = await supabase.auth.verifyOtp({
+          token_hash: token,
+          type: 'recovery'
+        })
+
+        if (updateResult.error) throw updateResult.error
+
+        // Now update the password
+        const { error: passwordError } = await supabase.auth.updateUser({
+          password: newPassword,
+        })
+
+        if (passwordError) throw passwordError
+      } else {
+        // Regular password update (user is already authenticated)
+        const { error: updateError } = await supabase.auth.updateUser({
+          password: newPassword,
+        })
+
+        if (updateError) throw updateError
+      }
 
       return { success: true }
     } catch (err) {
@@ -200,6 +231,14 @@ export const useAuthStore = defineStore('auth', () => {
 
     supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
+      
+      // Clear URL hash/query params after successful auth state change
+      if (session && window.location.hash.includes('access_token')) {
+        // Clean URL without refreshing the page
+        const url = new URL(window.location)
+        url.hash = ''
+        window.history.replaceState({}, document.title, url.toString())
+      }
     })
   }
 

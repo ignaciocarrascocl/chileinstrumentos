@@ -39,7 +39,7 @@ export function useAuth() {
   }
 
   // Form submission helpers
-  const handleSignUp = async (email, password, confirmPassword) => {
+  const handleSignUp = async (email, password, confirmPassword, displayName) => {
     const errors = validateForm(email, password)
     const confirmError = validatePasswordConfirmation(password, confirmPassword)
 
@@ -47,11 +47,19 @@ export function useAuth() {
       errors.push(confirmError)
     }
 
+    if (!displayName || !displayName.trim()) {
+      errors.push('El nombre de usuario es requerido')
+    } else if (displayName.trim().length < 2) {
+      errors.push('El nombre debe tener al menos 2 caracteres')
+    } else if (displayName.trim().length > 50) {
+      errors.push('El nombre no puede tener más de 50 caracteres')
+    }
+
     if (errors.length > 0) {
       return { success: false, errors }
     }
 
-    const result = await authStore.signUp(email, password)
+    const result = await authStore.signUp(email, password, displayName.trim())
     return result
   }
 

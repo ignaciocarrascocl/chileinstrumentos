@@ -206,13 +206,15 @@ const handleRegister = async () => {
   const result = await handleSignUp(
     formData.value.email,
     formData.value.password,
-    formData.value.confirmPassword
+    formData.value.confirmPassword,
+    formData.value.displayName
   )
 
   if (result.success) {
     showSuccessMessage.value = true
     // Reset form
     formData.value = {
+      displayName: '',
       email: '',
       password: '',
       confirmPassword: '',

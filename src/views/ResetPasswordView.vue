@@ -176,18 +176,29 @@ const handleResetPassword = async () => {
 
 const checkRecoveryToken = () => {
   // Check if we have the required URL parameters for password recovery
-  const accessToken = route.query.access_token
-  const refreshToken = route.query.refresh_token
+  // The URL from Supabase comes with different parameter names
+  const token = route.query.token
   const type = route.query.type
+  
+  // Also check the fragment/hash for tokens (some OAuth flows use this)
+  const urlParams = new URLSearchParams(window.location.hash.substring(1))
+  const accessToken = route.query.access_token || urlParams.get('access_token')
+  const refreshToken = route.query.refresh_token || urlParams.get('refresh_token')
 
-  if (type !== 'recovery' || !accessToken || !refreshToken) {
+  // For password recovery, we need either a token or access_token
+  if (type !== 'recovery' || (!token && !accessToken)) {
     invalidToken.value = true
     return
   }
 
-  // Set the session with the tokens from the URL
-  // This will automatically authenticate the user for the password update
-  authStore.setRecoverySession(accessToken, refreshToken)
+  // If we have access_token and refresh_token, set the session
+  if (accessToken && refreshToken) {
+    authStore.setRecoverySession(accessToken, refreshToken)
+  } else if (token) {
+    // For recovery tokens, we don't need to set session immediately
+    // The token will be used when updating the password
+    invalidToken.value = false
+  }
 }
 
 // Clear errors when component mounts
