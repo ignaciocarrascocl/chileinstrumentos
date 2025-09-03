@@ -1,0 +1,8 @@
+# Netlify redirects for Vue.js SPA
+# This ensures all routes are handled by the client-side router
+
+# Handle all routes by serving index.html
+/*    /index.html   200
+
+# Optional: Redirect HTTP to HTTPS
+# http://chileinstrumentos.netlify.app/*    https://chileinstrumentos.netlify.app/:splat    301!
