@@ -175,6 +175,23 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const setRecoverySession = async (accessToken, refreshToken) => {
+    try {
+      const { data, error } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken
+      })
+
+      if (error) throw error
+
+      setUser(data.user)
+      return { success: true, data }
+    } catch (err) {
+      error.value = err.message
+      return { success: false, error: err.message }
+    }
+  }
+
   // Initialize auth state listener
   const initializeAuth = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -207,6 +224,7 @@ export const useAuthStore = defineStore('auth', () => {
     updatePassword,
     updateDisplayName,
     getCurrentUser,
+    setRecoverySession,
     initializeAuth,
   }
 })

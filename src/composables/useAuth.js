@@ -100,6 +100,25 @@ export function useAuth() {
     return result
   }
 
+  const handleUpdatePassword = async (password, confirmPassword) => {
+    const errors = validateForm('temp@email.com', password) // Use temp email for validation
+    const confirmError = validatePasswordConfirmation(password, confirmPassword)
+
+    if (confirmError) {
+      errors.push(confirmError)
+    }
+
+    // Remove email error since we only want password validation
+    const passwordErrors = errors.filter(error => !error.includes('email'))
+
+    if (passwordErrors.length > 0) {
+      return { success: false, errors: passwordErrors }
+    }
+
+    const result = await authStore.updatePassword(password)
+    return result
+  }
+
   return {
     // Store access
     authStore,
@@ -116,5 +135,6 @@ export function useAuth() {
     handleSignOut,
     handleResetPassword,
     handleUpdateDisplayName,
+    handleUpdatePassword,
   }
 }

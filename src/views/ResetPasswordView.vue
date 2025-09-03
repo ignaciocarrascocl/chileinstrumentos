@@ -5,17 +5,16 @@
         <div class="card shadow-custom">
           <div class="card-header text-center">
             <h4 class="mb-0">
-              <i class="bi bi-person-plus me-2"></i>
-              Crear Cuenta
+              <i class="bi bi-lock-fill me-2"></i>
+              Restablecer Contraseña
             </h4>
           </div>
           <div class="card-body p-4">
             <!-- Success Message -->
-            <div v-if="showSuccessMessage" class="alert alert-info d-flex align-items-center" role="alert">
+            <div v-if="showSuccessMessage" class="alert alert-success d-flex align-items-center" role="alert">
               <i class="bi bi-check-circle-fill me-2"></i>
               <div>
-                ¡Cuenta creada exitosamente! Te hemos enviado un email de confirmación.
-                Por favor revisa tu bandeja de entrada y haz clic en el enlace para activar tu cuenta.
+                ¡Contraseña actualizada correctamente! Ahora puedes iniciar sesión con tu nueva contraseña.
               </div>
             </div>
 
@@ -38,44 +37,18 @@
               </ul>
             </div>
 
-            <!-- Register Form -->
-            <form @submit.prevent="handleRegister" v-if="!showSuccessMessage">
-              <div class="mb-3">
-                <label for="displayName" class="form-label">
-                  <i class="bi bi-person me-1"></i>
-                  Nombre de Usuario
-                </label>
-                <input
-                  id="displayName"
-                  v-model="formData.displayName"
-                  type="text"
-                  class="form-control"
-                  placeholder="Ej: Juan Pérez"
-                  :disabled="authStore.loading"
-                  required
-                >
-              </div>
+            <!-- Token Invalid Message -->
+            <div v-if="invalidToken" class="alert alert-warning" role="alert">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              El enlace de recuperación ha expirado o no es válido. Por favor solicita un nuevo enlace de recuperación.
+            </div>
 
-              <div class="mb-3">
-                <label for="email" class="form-label">
-                  <i class="bi bi-envelope me-1"></i>
-                  Email
-                </label>
-                <input
-                  id="email"
-                  v-model="formData.email"
-                  type="email"
-                  class="form-control"
-                  placeholder="tu@email.com"
-                  :disabled="authStore.loading"
-                  required
-                >
-              </div>
-
+            <!-- Reset Password Form -->
+            <form @submit.prevent="handleResetPassword" v-if="!showSuccessMessage && !invalidToken">
               <div class="mb-3">
                 <label for="password" class="form-label">
                   <i class="bi bi-lock me-1"></i>
-                  Contraseña
+                  Nueva Contraseña
                 </label>
                 <div class="input-group">
                   <input
@@ -101,7 +74,7 @@
               <div class="mb-3">
                 <label for="confirmPassword" class="form-label">
                   <i class="bi bi-lock-fill me-1"></i>
-                  Confirmar Contraseña
+                  Confirmar Nueva Contraseña
                 </label>
                 <div class="input-group">
                   <input
@@ -109,7 +82,7 @@
                     v-model="formData.confirmPassword"
                     :type="showConfirmPassword ? 'text' : 'password'"
                     class="form-control"
-                    placeholder="Repite tu contraseña"
+                    placeholder="Repite la contraseña"
                     :disabled="authStore.loading"
                     required
                   >
@@ -124,51 +97,39 @@
                 </div>
               </div>
 
-              <div class="mb-3">
-                <div class="form-check">
-                  <input
-                    id="terms"
-                    v-model="formData.acceptTerms"
-                    type="checkbox"
-                    class="form-check-input"
-                    :disabled="authStore.loading"
-                    required
-                  >
-                  <label for="terms" class="form-check-label">
-                    Acepto los
-                    <a href="#" class="text-decoration-none">términos y condiciones</a>
-                  </label>
-                </div>
-              </div>
-
               <button
                 type="submit"
                 class="btn btn-primary w-100 mb-3"
-                :disabled="authStore.loading || !formData.acceptTerms"
+                :disabled="authStore.loading"
               >
                 <span v-if="authStore.loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                <i v-else class="bi bi-person-plus me-2"></i>
-                {{ authStore.loading ? 'Creando cuenta...' : 'Crear Cuenta' }}
+                <i v-else class="bi bi-check-circle me-2"></i>
+                {{ authStore.loading ? 'Actualizando...' : 'Actualizar Contraseña' }}
               </button>
             </form>
 
             <!-- Navigation -->
-            <div v-if="showSuccessMessage" class="text-center">
-              <router-link to="/login" class="btn btn-primary">
+            <div class="text-center">
+              <router-link v-if="showSuccessMessage" to="/login" class="btn btn-primary">
                 <i class="bi bi-box-arrow-in-right me-2"></i>
-                Ir a Iniciar Sesión
+                Iniciar Sesión
               </router-link>
-            </div>
-
-            <div v-else>
-              <hr class="my-4">
-              <div class="text-center">
-                <p class="text-muted mb-2">¿Ya tienes una cuenta?</p>
-                <router-link to="/login" class="btn btn-outline-primary">
-                  <i class="bi bi-box-arrow-in-right me-2"></i>
-                  Iniciar Sesión
+              
+              <div v-else-if="invalidToken">
+                <router-link to="/forgot-password" class="btn btn-outline-primary me-2">
+                  <i class="bi bi-envelope me-2"></i>
+                  Solicitar Nuevo Enlace
+                </router-link>
+                <router-link to="/login" class="text-decoration-none text-primary">
+                  <i class="bi bi-arrow-left me-1"></i>
+                  Volver a Iniciar Sesión
                 </router-link>
               </div>
+              
+              <router-link v-else to="/login" class="text-decoration-none text-primary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Volver a Iniciar Sesión
+              </router-link>
             </div>
           </div>
         </div>
@@ -179,48 +140,54 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 
-const { authStore, handleSignUp } = useAuth()
+const route = useRoute()
+const { authStore, handleUpdatePassword } = useAuth()
 
 // Form data
 const formData = ref({
-  displayName: '',
-  email: '',
   password: '',
-  confirmPassword: '',
-  acceptTerms: false
+  confirmPassword: ''
 })
 
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 const validationErrors = ref([])
 const showSuccessMessage = ref(false)
+const invalidToken = ref(false)
 
 // Methods
-const handleRegister = async () => {
+const handleResetPassword = async () => {
   validationErrors.value = []
   authStore.clearError()
-  showSuccessMessage.value = false
 
-  const result = await handleSignUp(
-    formData.value.email,
-    formData.value.password,
-    formData.value.confirmPassword
-  )
+  const result = await handleUpdatePassword(formData.value.password, formData.value.confirmPassword)
 
   if (result.success) {
     showSuccessMessage.value = true
-    // Reset form
-    formData.value = {
-      email: '',
-      password: '',
-      confirmPassword: '',
-      acceptTerms: false
-    }
+    formData.value.password = ''
+    formData.value.confirmPassword = ''
   } else if (result.errors) {
     validationErrors.value = result.errors
   }
+}
+
+const checkRecoveryToken = () => {
+  // Check if we have the required URL parameters for password recovery
+  const accessToken = route.query.access_token
+  const refreshToken = route.query.refresh_token
+  const type = route.query.type
+
+  if (type !== 'recovery' || !accessToken || !refreshToken) {
+    invalidToken.value = true
+    return
+  }
+
+  // Set the session with the tokens from the URL
+  // This will automatically authenticate the user for the password update
+  authStore.setRecoverySession(accessToken, refreshToken)
 }
 
 // Clear errors when component mounts
@@ -228,6 +195,7 @@ onMounted(() => {
   authStore.clearError()
   validationErrors.value = []
   showSuccessMessage.value = false
+  checkRecoveryToken()
 })
 </script>
 
@@ -268,17 +236,41 @@ onMounted(() => {
 .btn-outline-primary {
   color: var(--electric-indigo);
   border-color: var(--electric-indigo);
+  transition: all 0.3s ease;
 }
 
 .btn-outline-primary:hover {
-  background: var(--gradient-primary);
+  background: var(--electric-indigo);
   border-color: var(--electric-indigo);
-  color: white;
 }
 
-.alert-info {
-  background: linear-gradient(135deg, #17a2b8, #138496);
+.shadow-custom {
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  background: var(--gradient-primary);
   color: white;
   border: none;
+}
+
+.alert {
+  border-radius: 8px;
+  border: none;
+}
+
+.alert-success {
+  background-color: #d1edff;
+  color: #0c4a6e;
+}
+
+.alert-danger {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.alert-warning {
+  background-color: #fef3c7;
+  color: #92400e;
 }
 </style>
