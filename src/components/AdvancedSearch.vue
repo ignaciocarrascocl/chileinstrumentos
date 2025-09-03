@@ -60,9 +60,9 @@
 
         <div class="row g-4">
           <!-- Fabricantes -->
-          <div class="col-lg-3 col-md-6">
+          <div class="col-12">
             <label class="form-label fw-semibold">
-              <i class="bi bi-building me-1"></i>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-factory-icon lucide-factory"><path d="M12 16h.01"/><path d="M16 16h.01"/><path d="M3 19a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5a.5.5 0 0 0-.769-.422l-4.462 2.844A.5.5 0 0 1 15 10.5v-2a.5.5 0 0 0-.769-.422L9.77 10.922A.5.5 0 0 1 9 10.5V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z"/><path d="M8 16h.01"/></svg>
               Fabricantes
             </label>
             <MultiSelect
@@ -74,9 +74,9 @@
           </div>
 
           <!-- Número de Teclas -->
-          <div class="col-lg-3 col-md-6">
+          <div class="col-12">
             <label class="form-label fw-semibold">
-              <i class="bi bi-piano me-1"></i>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-keyboard-music-icon lucide-keyboard-music"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h4"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M2 12h20"/><path d="M6 12v4"/><path d="M10 12v4"/><path d="M14 12v4"/><path d="M18 12v4"/></svg>
               Número de Teclas
             </label>
             <MultiSelect
@@ -88,9 +88,9 @@
           </div>
 
           <!-- Tipo de Teclas -->
-          <div class="col-lg-3 col-md-6">
+          <div class="col-12">
             <label class="form-label fw-semibold">
-              <i class="bi bi-keyboard me-1"></i>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-blend-icon lucide-blend"><circle cx="9" cy="9" r="7"/><circle cx="15" cy="15" r="7"/></svg>
               Tipo de Teclas
             </label>
             <MultiSelect
@@ -102,9 +102,9 @@
           </div>
 
           <!-- Número de Pads -->
-          <div class="col-lg-3 col-md-6">
+          <div class="col-12">
             <label class="form-label fw-semibold">
-              <i class="bi bi-grid-3x3 me-1"></i>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-grid-icon lucide-layout-grid"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
               Número de Pads
             </label>
             <MultiSelect
@@ -119,9 +119,9 @@
         <!-- Rangos -->
         <div class="row g-4 mt-2">
           <!-- Rango de Años -->
-          <div class="col-lg-6">
+          <div class="col-12">
             <label class="form-label fw-semibold">
-              <i class="bi bi-calendar-range me-1"></i>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar1-icon lucide-calendar-1"><path d="M11 14h1v4"/><path d="M16 2v4"/><path d="M3 10h18"/><path d="M8 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/></svg>
               Rango de Años ({{ minYear }} - {{ maxYear }})
             </label>
             <RangeSlider
@@ -134,9 +134,9 @@
           </div>
 
           <!-- Rango de Precios -->
-          <div class="col-lg-6">
+          <div class="col-12">
             <label class="form-label fw-semibold">
-              <i class="bi bi-currency-dollar me-1"></i>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-dollar-sign-icon lucide-circle-dollar-sign"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
               Rango de Precios (${{ minPrice }} - ${{ maxPrice }})
             </label>
             <RangeSlider
@@ -280,14 +280,14 @@ const padCountOptions = computed(() => {
 const minYear = computed(() => {
   const years = props.controllers
     .map(c => parseInt(c.Year))
-    .filter(y => !isNaN(y))
+    .filter(y => !isNaN(y) && y > 0)
   return years.length > 0 ? Math.min(...years) : 1980
 })
 
 const maxYear = computed(() => {
   const years = props.controllers
     .map(c => parseInt(c.Year))
-    .filter(y => !isNaN(y))
+    .filter(y => !isNaN(y) && y > 0)
   return years.length > 0 ? Math.max(...years) : new Date().getFullYear()
 })
 
@@ -301,8 +301,8 @@ const minPrice = computed(() => {
 
   const prices = props.controllers
     .map(c => parsePrice(c['Street Price-0']))
-    .filter(p => !isNaN(p))
-  return prices.length > 0 ? Math.min(...prices) : 0
+    .filter(p => !isNaN(p) && p > 0)
+  return prices.length > 0 ? Math.min(...prices) : 50
 })
 
 const maxPrice = computed(() => {
@@ -315,7 +315,7 @@ const maxPrice = computed(() => {
 
   const prices = props.controllers
     .map(c => parsePrice(c['Street Price-0']))
-    .filter(p => !isNaN(p))
+    .filter(p => !isNaN(p) && p > 0)
   return prices.length > 0 ? Math.max(...prices) : 5000
 })
 
@@ -334,6 +334,7 @@ const activeFiltersCount = computed(() => {
 
 // Inicializar rangos cuando se cargan los datos
 watch([minYear, maxYear, minPrice, maxPrice], () => {
+  // Solo inicializar si son los valores por defecto
   if (yearRange.value[0] === 1980 && yearRange.value[1] === new Date().getFullYear()) {
     yearRange.value = [minYear.value, maxYear.value]
   }

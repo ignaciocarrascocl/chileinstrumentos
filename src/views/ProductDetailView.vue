@@ -5,12 +5,11 @@
       <div class="spinner-border" role="status">
         <span class="visually-hidden">Cargando...</span>
       </div>
-      <p class="mt-3 text-muted">Cargando detalles del producto...</p>
     </div>
 
     <!-- Error State -->
     <div v-else-if="error" class="alert alert-danger" role="alert">
-      <i class="bi bi-exclamation-triangle me-2"></i>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-keyboard-music-icon lucide-keyboard-music me-2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h4"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M2 12h20"/><path d="M6 12v4"/><path d="M10 12v4"/><path d="M14 12v4"/><path d="M18 12v4"/></svg>
       {{ error }}
     </div>
 
@@ -18,8 +17,8 @@
     <div v-else-if="product" class="row">
       <!-- Back Button -->
       <div class="col-12 mb-4">
-        <button @click="goBack" class="btn btn-outline-primary">
-          <i class="bi bi-arrow-left me-2"></i>
+        <button @click="goBack" class="btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-keyboard-music-icon lucide-keyboard-music me-2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h4"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M2 12h20"/><path d="M6 12v4"/><path d="M10 12v4"/><path d="M14 12v4"/><path d="M18 12v4"/></svg>
           Volver al Catálogo
         </button>
       </div>
@@ -43,164 +42,32 @@
 
       <!-- Product Information -->
       <div class="col-lg-6">
-        <div class="card shadow-custom mb-4">
-          <div class="card-header">
-            <h1 class="h3 mb-0 text-white">
-              <i class="bi bi-music-note-beamed me-2"></i>
-              {{ product.Model }}
-            </h1>
-          </div>
-          <div class="card-body">
-            <!-- Basic Information -->
-            <div class="mb-4">
-              <h6 class="text-muted mb-1">Fabricante</h6>
-              <p class="h5 text-primary mb-3">{{ product['Manufacturer-0'] || 'No especificado' }}</p>
-
-              <div v-if="product['Blog-headline-0']" class="mb-3">
-                <h6 class="text-muted mb-1">Descripción</h6>
-                <p class="text-dark">{{ product['Blog-headline-0'] }}</p>
-              </div>
-
-              <div class="row">
-                <div v-if="product['Street Price-0']" class="col-md-6 mb-3">
-                  <h6 class="text-muted mb-1">Precio</h6>
-                  <p class="h4 text-success fw-bold">{{ product['Street Price-0'] }}</p>
-                </div>
-
-                <div v-if="product.Year" class="col-md-6 mb-3">
-                  <h6 class="text-muted mb-1">Año</h6>
-                  <span class="badge bg-primary fs-6">{{ product.Year }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <!-- Basic Information -->
+        <ProductBasicInfo :product="product" />
 
         <!-- Technical Specifications -->
-        <div class="card shadow-custom mb-4">
-          <div class="card-header">
-            <h5 class="mb-0 text-white">
-              <i class="bi bi-gear me-2"></i>
-              Especificaciones Técnicas
-            </h5>
-          </div>
-          <div class="card-body">
-            <div class="row g-4">
-              <div v-if="product.keys_count && product.keys_count !== 'NA'" class="col-md-6">
-                <div class="d-flex align-items-center">
-                  <i class="bi bi-piano text-primary me-3 fs-4"></i>
-                  <div>
-                    <small class="text-muted d-block">Número de Teclas</small>
-                    <span class="fw-semibold fs-5">{{ product.keys_count }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div v-if="product.keys_type && product.keys_type !== 'NA'" class="col-md-6">
-                <div class="d-flex align-items-center">
-                  <i class="bi bi-keyboard text-primary me-3 fs-4"></i>
-                  <div>
-                    <small class="text-muted d-block">Tipo de Teclas</small>
-                    <span class="fw-semibold">{{ product.keys_type }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div v-if="product.pads_count && product.pads_count > 0" class="col-md-6">
-                <div class="d-flex align-items-center">
-                  <i class="bi bi-grid-3x3 text-primary me-3 fs-4"></i>
-                  <div>
-                    <small class="text-muted d-block">Número de Pads</small>
-                    <span class="fw-semibold fs-5">{{ product.pads_count }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div v-if="product.weight_lbs && product.weight_lbs !== 'NA'" class="col-md-6">
-                <div class="d-flex align-items-center">
-                  <i class="bi bi-speedometer text-primary me-3 fs-4"></i>
-                  <div>
-                    <small class="text-muted d-block">Peso</small>
-                    <span class="fw-semibold">{{ product.weight_lbs }} lbs</span>
-                  </div>
-                </div>
-              </div>
-
-              <div v-if="product.dimensions_inches && product.dimensions_inches !== 'NA'" class="col-12">
-                <div class="d-flex align-items-center">
-                  <i class="bi bi-rulers text-primary me-3 fs-4"></i>
-                  <div>
-                    <small class="text-muted d-block">Dimensiones (Largo × Ancho × Alto)</small>
-                    <span class="fw-semibold">{{ formatDimensions(product.dimensions_inches) }} pulgadas</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ProductTechnicalSpecs :product="product" />
 
         <!-- Controls -->
-        <div v-if="product.controls && product.controls.length > 0" class="card shadow-custom mb-4">
-          <div class="card-header">
-            <h5 class="mb-0 text-white">
-              <i class="bi bi-sliders me-2"></i>
-              Controles
-            </h5>
-          </div>
-          <div class="card-body">
-            <div class="d-flex flex-wrap gap-2">
-              <span
-                v-for="control in product.controls"
-                :key="control"
-                class="badge bg-light text-dark border fs-6 px-3 py-2"
-              >
-                {{ control }}
-              </span>
-            </div>
-          </div>
-        </div>
+        <ProductFeatureSection
+          title="Controles"
+          :items="product.controls"
+          badge-class="bg-light text-dark"
+        />
 
         <!-- Connectivity -->
-        <div v-if="product.connectivity && product.connectivity.length > 0" class="card shadow-custom mb-4">
-          <div class="card-header">
-            <h5 class="mb-0 text-white">
-              <i class="bi bi-plug me-2"></i>
-              Conectividad
-            </h5>
-          </div>
-          <div class="card-body">
-            <div class="d-flex flex-wrap gap-2">
-              <span
-                v-for="connection in product.connectivity"
-                :key="connection"
-                class="badge bg-info text-dark fs-6 px-3 py-2"
-              >
-                {{ connection }}
-              </span>
-            </div>
-          </div>
-        </div>
+        <ProductFeatureSection
+          title="Conectividad"
+          :items="product.connectivity"
+          badge-class="bg-secondary text-white"
+        />
 
         <!-- Power -->
-        <div v-if="product.power && product.power.length > 0" class="card shadow-custom mb-4">
-          <div class="card-header">
-            <h5 class="mb-0 text-white">
-              <i class="bi bi-lightning me-2"></i>
-              Alimentación
-            </h5>
-          </div>
-          <div class="card-body">
-            <div class="d-flex flex-wrap gap-2">
-              <span
-                v-for="powerType in product.power"
-                :key="powerType"
-                class="badge bg-warning text-dark fs-6 px-3 py-2"
-              >
-                {{ powerType }}
-              </span>
-            </div>
-          </div>
-        </div>
+        <ProductFeatureSection
+          title="Alimentación"
+          :items="product.power"
+          badge-class="bg-primary text-white"
+        />
 
         <!-- Actions -->
         <div class="card shadow-custom">
@@ -212,11 +79,11 @@
                 target="_blank"
                 class="btn btn-outline-primary"
               >
-                <i class="bi bi-box-arrow-up-right me-2"></i>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-keyboard-music-icon lucide-keyboard-music me-2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h4"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M2 12h20"/><path d="M6 12v4"/><path d="M10 12v4"/><path d="M14 12v4"/><path d="M18 12v4"/></svg>
                 Ver Imagen Original
               </a>
               <button @click="goBack" class="btn btn-primary">
-                <i class="bi bi-arrow-left me-2"></i>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-keyboard-music-icon lucide-keyboard-music me-2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h4"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M2 12h20"/><path d="M6 12v4"/><path d="M10 12v4"/><path d="M14 12v4"/><path d="M18 12v4"/></svg>
                 Volver al Catálogo
               </button>
             </div>
@@ -227,11 +94,10 @@
 
     <!-- Product Not Found -->
     <div v-else class="text-center py-5">
-      <i class="bi bi-search display-1 text-muted mb-3"></i>
+      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-keyboard-music-icon lucide-keyboard-music text-muted mb-3"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h4"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M2 12h20"/><path d="M6 12v4"/><path d="M10 12v4"/><path d="M14 12v4"/><path d="M18 12v4"/></svg>
       <h4 class="text-muted">Producto no encontrado</h4>
-      <p class="text-muted">El producto que buscas no existe o ha sido eliminado.</p>
       <button @click="goBack" class="btn btn-primary">
-        <i class="bi bi-arrow-left me-2"></i>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-keyboard-music-icon lucide-keyboard-music me-2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h4"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M2 12h20"/><path d="M6 12v4"/><path d="M10 12v4"/><path d="M14 12v4"/><path d="M18 12v4"/></svg>
         Volver al Catálogo
       </button>
     </div>
@@ -239,94 +105,37 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useMidiStore } from '@/stores/midiStore'
+import { onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { useProductDetail } from '@/composables/useProductDetail'
+import { useProductNavigation } from '@/composables/useProductNavigation'
+import { useProductFormatting } from '@/composables/useProductFormatting'
+import ProductBasicInfo from '@/components/ProductBasicInfo.vue'
+import ProductTechnicalSpecs from '@/components/ProductTechnicalSpecs.vue'
+import ProductFeatureSection from '@/components/ProductFeatureSection.vue'
 
 const route = useRoute()
-const router = useRouter()
-const midiStore = useMidiStore()
 
-const product = ref(null)
-const loading = ref(true)
-const error = ref(null)
+// ==========================================
+// COMPOSABLES
+// ==========================================
 
-// Get product ID from route params
+const { product, loading, error, loadProduct } = useProductDetail()
+const { goBack } = useProductNavigation()
+const { getImageUrl, handleImageError } = useProductFormatting()
+
+// ==========================================
+// COMPUTED PROPERTIES
+// ==========================================
+
 const productId = computed(() => route.params.id)
 
-// Function to get image URL
-const getImageUrl = (product) => {
-  if (product.image) {
-    return `/downloaded_images/${product.image}`
-  }
-  
-  if (product['parsed image']) {
-    return product['parsed image']
-  }
-  
-  // Fallback placeholder
-  return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2ZmZmZmZiIvPjwvc3ZnPg=='
-}
+// ==========================================
+// LIFECYCLE HOOKS
+// ==========================================
 
-// Handle image error
-const handleImageError = (event) => {
-  event.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2ZmZmZmZiIvPjwvc3ZnPg=='
-}
-
-// Format dimensions
-const formatDimensions = (dimensions) => {
-  if (!dimensions || dimensions === 'NA') return 'No especificado'
-
-  const parts = dimensions.split(';')
-  if (parts.length === 3) {
-    return `${parts[0]} × ${parts[1]} × ${parts[2]}`
-  }
-  return dimensions
-}
-
-// Load product data
-const loadProduct = async () => {
-  loading.value = true
-  error.value = null
-
-  try {
-    // Try to get product by ID from Supabase first
-    const foundProduct = await midiStore.getProductById(productId.value)
-
-    if (foundProduct) {
-      product.value = foundProduct
-    } else {
-      // Fallback: If store doesn't have controllers loaded, load them first and search by image field
-      if (midiStore.controllers.length === 0) {
-        await midiStore.loadControllers()
-      }
-
-      // Find product by image field (for backward compatibility)
-      const fallbackProduct = midiStore.controllers.find(controller => 
-        controller.image === productId.value
-      )
-
-      if (fallbackProduct) {
-        product.value = fallbackProduct
-      } else {
-        error.value = 'Producto no encontrado'
-      }
-    }
-  } catch (err) {
-    error.value = `Error al cargar el producto: ${err.message}`
-  } finally {
-    loading.value = false
-  }
-}
-
-// Navigation functions
-const goBack = () => {
-  router.push({ name: 'catalog' })
-}
-
-// Load product on component mount
 onMounted(() => {
-  loadProduct()
+  loadProduct(productId.value)
 })
 </script>
 
@@ -334,7 +143,7 @@ onMounted(() => {
 .card {
   border: none;
   border-radius: 16px;
-  background: rgba(248, 240, 251, 0.9);
+  background: white;
   backdrop-filter: blur(10px);
   transition: all 0.3s ease;
 }
@@ -372,6 +181,7 @@ onMounted(() => {
   border-radius: 12px;
   font-weight: 500;
   transition: all 0.3s ease;
+  border: none;
 }
 
 .btn:hover {
@@ -387,11 +197,11 @@ onMounted(() => {
   .sticky-top {
     position: relative !important;
   }
-  
+
   .card:hover {
     transform: none;
   }
-  
+
   .btn:hover {
     transform: none;
   }

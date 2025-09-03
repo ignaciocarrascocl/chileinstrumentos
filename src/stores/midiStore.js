@@ -229,9 +229,9 @@ export const useMidiStore = defineStore('midi', () => {
                          advancedFilters.value.yearRange.max !== null
 
     if (hasYearFilter) {
-      const allYears = controllers.value.map(c => parseInt(c.Year)).filter(y => !isNaN(y))
-      const dataMinYear = Math.min(...allYears)
-      const dataMaxYear = Math.max(...allYears)
+      const allYears = controllers.value.map(c => parseInt(c.Year)).filter(y => !isNaN(y) && y > 0)
+      const dataMinYear = allYears.length > 0 ? Math.min(...allYears) : 1980
+      const dataMaxYear = allYears.length > 0 ? Math.max(...allYears) : new Date().getFullYear()
 
       // Solo aplicar filtro si los valores son realmente restrictivos
       const isMinRestricted = advancedFilters.value.yearRange.min > dataMinYear
@@ -240,7 +240,7 @@ export const useMidiStore = defineStore('midi', () => {
       if (isMinRestricted || isMaxRestricted) {
         filtered = filtered.filter(controller => {
           const year = parseInt(controller.Year)
-          if (!year || isNaN(year)) return false
+          if (!year || isNaN(year) || year <= 0) return false
 
           const minYear = advancedFilters.value.yearRange.min
           const maxYear = advancedFilters.value.yearRange.max
@@ -261,8 +261,8 @@ export const useMidiStore = defineStore('midi', () => {
 
     if (hasPriceFilter) {
       const allPrices = controllers.value.map(c => parsePrice(c['Street Price-0'])).filter(p => !isNaN(p) && p > 0)
-      const dataMinPrice = Math.min(...allPrices)
-      const dataMaxPrice = Math.max(...allPrices)
+      const dataMinPrice = allPrices.length > 0 ? Math.min(...allPrices) : 50
+      const dataMaxPrice = allPrices.length > 0 ? Math.max(...allPrices) : 5000
 
       // Solo aplicar filtro si los valores son realmente restrictivos
       const isMinRestricted = advancedFilters.value.priceRange.min > dataMinPrice
@@ -271,7 +271,7 @@ export const useMidiStore = defineStore('midi', () => {
       if (isMinRestricted || isMaxRestricted) {
         filtered = filtered.filter(controller => {
           const price = parsePrice(controller['Street Price-0'])
-          if (isNaN(price)) return false
+          if (isNaN(price) || price <= 0) return false
 
           const minPrice = advancedFilters.value.priceRange.min
           const maxPrice = advancedFilters.value.priceRange.max
