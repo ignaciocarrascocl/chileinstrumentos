@@ -174,39 +174,74 @@ const handleResetPassword = async () => {
   }
 }
 
-const checkRecoveryToken = () => {
-  // Check if we have the required URL parameters for password recovery
-  // The URL from Supabase comes with different parameter names
+const checkRecoveryToken = async () => {
+  // Check both query parameters and URL hash for recovery tokens
   const token = route.query.token
   const type = route.query.type
   
-  // Also check the fragment/hash for tokens (some OAuth flows use this)
-  const urlParams = new URLSearchParams(window.location.hash.substring(1))
-  const accessToken = route.query.access_token || urlParams.get('access_token')
-  const refreshToken = route.query.refresh_token || urlParams.get('refresh_token')
+  // Supabase often sends tokens in the URL hash (fragment)
+  const urlFragment = window.location.hash.substring(1)
+  const fragmentParams = new URLSearchParams(urlFragment)
+  
+  const accessToken = route.query.access_token || fragmentParams.get('access_token')
+  const refreshToken = route.query.refresh_token || fragmentParams.get('refresh_token')
+  const errorCode = route.query.error || fragmentParams.get('error')
+  const errorDescription = route.query.error_description || fragmentParams.get('error_description')
 
-  // For password recovery, we need either a token or access_token
-  if (type !== 'recovery' || (!token && !accessToken)) {
+  // Check for errors first
+  if (errorCode) {
+    console.error('Recovery error:', errorCode, errorDescription)
+    invalidToken.value = true
+    authStore.setError(errorDescription || 'Error al procesar el enlace de recuperación')
+    return
+  }
+
+  // For password recovery, we need either a recovery token or access_token
+  if (type !== 'recovery' && !accessToken) {
     invalidToken.value = true
     return
   }
 
-  // If we have access_token and refresh_token, set the session
-  if (accessToken && refreshToken) {
-    authStore.setRecoverySession(accessToken, refreshToken)
-  } else if (token) {
-    // For recovery tokens, we don't need to set session immediately
-    // The token will be used when updating the password
+  try {
+    // If we have access_token and refresh_token, set the session
+    if (accessToken && refreshToken) {
+      const result = await authStore.setRecoverySession(accessToken, refreshToken)
+      if (!result.success) {
+        invalidToken.value = true
+        return
+      }
+    } else if (token) {
+      // Verify the recovery token
+      const result = await authStore.verifyRecoveryToken(token)
+      if (!result.success) {
+        invalidToken.value = true
+        return
+      }
+    } else {
+      invalidToken.value = true
+      return
+    }
+
+    // If we get here, the token is valid
     invalidToken.value = false
+    
+    // Clean up the URL to remove sensitive tokens
+    const cleanUrl = window.location.origin + window.location.pathname
+    window.history.replaceState({}, document.title, cleanUrl)
+    
+  } catch (error) {
+    console.error('Error checking recovery token:', error)
+    invalidToken.value = true
+    authStore.setError('Error al verificar el enlace de recuperación')
   }
 }
 
 // Clear errors when component mounts
-onMounted(() => {
+onMounted(async () => {
   authStore.clearError()
   validationErrors.value = []
   showSuccessMessage.value = false
-  checkRecoveryToken()
+  await checkRecoveryToken()
 })
 </script>
 

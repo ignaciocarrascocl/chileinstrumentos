@@ -32,6 +32,10 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
   }
 
+  const setError = (errorMessage) => {
+    error.value = errorMessage
+  }
+
   const setUser = (userData) => {
     user.value = userData
   }
@@ -129,36 +133,12 @@ export const useAuthStore = defineStore('auth', () => {
       loading.value = true
       error.value = null
 
-      // Check if we have a recovery token in the URL
-      const urlParams = new URLSearchParams(window.location.search)
-      const token = urlParams.get('token')
-      const type = urlParams.get('type')
+      // Simply update the password for the current authenticated user
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+      })
 
-      let updateResult
-
-      if (type === 'recovery' && token) {
-        // Use the recovery token to verify and update password
-        updateResult = await supabase.auth.verifyOtp({
-          token_hash: token,
-          type: 'recovery'
-        })
-
-        if (updateResult.error) throw updateResult.error
-
-        // Now update the password
-        const { error: passwordError } = await supabase.auth.updateUser({
-          password: newPassword,
-        })
-
-        if (passwordError) throw passwordError
-      } else {
-        // Regular password update (user is already authenticated)
-        const { error: updateError } = await supabase.auth.updateUser({
-          password: newPassword,
-        })
-
-        if (updateError) throw updateError
-      }
+      if (updateError) throw updateError
 
       return { success: true }
     } catch (err) {
@@ -223,20 +203,46 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const verifyRecoveryToken = async (token) => {
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        token_hash: token,
+        type: 'recovery'
+      })
+
+      if (error) throw error
+
+      setUser(data.user)
+      return { success: true, data }
+    } catch (err) {
+      error.value = err.message
+      return { success: false, error: err.message }
+    }
+  }
+
   // Initialize auth state listener
   const initializeAuth = () => {
+    // Handle auth state from URL on page load
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
     })
 
-    supabase.auth.onAuthStateChange((_event, session) => {
+    // Listen for auth state changes
+    supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
       
-      // Clear URL hash/query params after successful auth state change
-      if (session && window.location.hash.includes('access_token')) {
+      // Handle specific auth events
+      if (event === 'PASSWORD_RECOVERY') {
+        // Password recovery flow is being handled
+        console.log('Password recovery event detected')
+      }
+      
+      // Clean URL hash/query params after successful auth state change
+      if (session && (window.location.hash.includes('access_token') || window.location.search.includes('access_token'))) {
         // Clean URL without refreshing the page
         const url = new URL(window.location)
         url.hash = ''
+        url.search = ''
         window.history.replaceState({}, document.title, url.toString())
       }
     })
@@ -255,6 +261,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     // Actions
     clearError,
+    setError,
     setUser,
     signUp,
     signIn,
@@ -264,6 +271,7 @@ export const useAuthStore = defineStore('auth', () => {
     updateDisplayName,
     getCurrentUser,
     setRecoverySession,
+    verifyRecoveryToken,
     initializeAuth,
   }
 })
