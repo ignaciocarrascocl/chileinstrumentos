@@ -230,13 +230,13 @@ export const useAuthStore = defineStore('auth', () => {
     // Listen for auth state changes
     supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
-      
+
       // Handle specific auth events
       if (event === 'PASSWORD_RECOVERY') {
         // Password recovery flow is being handled
         console.log('Password recovery event detected')
       }
-      
+
       // Clean URL hash/query params after successful auth state change
       if (session && (window.location.hash.includes('access_token') || window.location.search.includes('access_token'))) {
         // Clean URL without refreshing the page

@@ -36,3 +36,9 @@ defineProps({
   }
 })
 </script>
+<style scoped>
+.bg-info {
+  background-color: var(--electric-indigo) !important;
+  color: white !important;
+}
+</style>

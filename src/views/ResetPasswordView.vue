@@ -114,7 +114,7 @@
                 <i class="bi bi-box-arrow-in-right me-2"></i>
                 Iniciar Sesión
               </router-link>
-              
+
               <div v-else-if="invalidToken">
                 <router-link to="/forgot-password" class="btn btn-outline-primary me-2">
                   <i class="bi bi-envelope me-2"></i>
@@ -125,7 +125,7 @@
                   Volver a Iniciar Sesión
                 </router-link>
               </div>
-              
+
               <router-link v-else to="/login" class="text-decoration-none text-primary">
                 <i class="bi bi-arrow-left me-1"></i>
                 Volver a Iniciar Sesión
@@ -178,11 +178,11 @@ const checkRecoveryToken = async () => {
   // Check both query parameters and URL hash for recovery tokens
   const token = route.query.token
   const type = route.query.type
-  
+
   // Supabase often sends tokens in the URL hash (fragment)
   const urlFragment = window.location.hash.substring(1)
   const fragmentParams = new URLSearchParams(urlFragment)
-  
+
   const accessToken = route.query.access_token || fragmentParams.get('access_token')
   const refreshToken = route.query.refresh_token || fragmentParams.get('refresh_token')
   const errorCode = route.query.error || fragmentParams.get('error')
@@ -224,11 +224,11 @@ const checkRecoveryToken = async () => {
 
     // If we get here, the token is valid
     invalidToken.value = false
-    
+
     // Clean up the URL to remove sensitive tokens
     const cleanUrl = window.location.origin + window.location.pathname
     window.history.replaceState({}, document.title, cleanUrl)
-    
+
   } catch (error) {
     console.error('Error checking recovery token:', error)
     invalidToken.value = true

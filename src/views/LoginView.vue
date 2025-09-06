@@ -101,10 +101,16 @@
 
             <!-- Additional Actions -->
             <div class="text-center">
-              <router-link to="/forgot-password" class="text-decoration-none text-primary">
-                <i class="bi bi-question-circle me-1"></i>
-                ¿Olvidaste tu contraseña?
-              </router-link>
+              <button
+              type="button"
+              class="btn btn-primary text-decoration-none w-100 mb-3"
+              :disabled="authStore.loading"
+              @click="$router.push('/forgot-password')"
+              >
+              <span v-if="authStore.loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              <i v-else class="bi bi-question-circle me-2"></i>
+              {{ authStore.loading ? 'Cargando...' : '¿Olvidaste tu contraseña?' }}
+              </button>
             </div>
 
             <hr class="my-4">
@@ -201,11 +207,12 @@ onMounted(() => {
 .btn-outline-primary {
   color: var(--electric-indigo);
   border-color: var(--electric-indigo);
+  transition: all 0.3s ease;
 }
 
 .btn-outline-primary:hover {
-  background: var(--gradient-primary);
+  background: var(--electric-indigo);
   border-color: var(--electric-indigo);
-  color: white;
 }
+
 </style>

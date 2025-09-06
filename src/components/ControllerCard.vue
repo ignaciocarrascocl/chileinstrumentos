@@ -49,7 +49,7 @@
 
       <!-- Footer de la tarjeta -->
       <div class="card-footer bg-transparent border-top-0">
-        <div class="btn btn-outline-primary btn-sm w-100">
+        <div class="btn btn-details btn-sm w-100">
           <i class="bi bi-info-circle me-2"></i>
           Ver Detalles
         </div>
@@ -73,6 +73,16 @@ const { getImageUrl, handleImageError } = useImageHandling()
 </script>
 
 <style scoped>
+.btn-details {
+    background: white;
+  border: 2px solid var(--electric-indigo);
+  color: var(--electric-indigo);
+
+}
+.btn-details:hover {
+  color: white;
+  background: var(--electric-indigo);
+}
 /* ...existing controller card styles... */
 .controller-card {
   transition: all 0.3s ease;

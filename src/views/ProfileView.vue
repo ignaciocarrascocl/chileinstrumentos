@@ -113,7 +113,7 @@
     </div>
 
     <!-- Edit Display Name Modal -->
-    <div v-if="showDisplayNameModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div v-if="showDisplayNameModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);" @click.self="closeDisplayNameModal">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -162,7 +162,7 @@
               </div>
 
               <div class="modal-footer px-0 pb-0">
-                <button type="button" class="btn btn-secondary" @click="closeDisplayNameModal">
+                <button type="button" class="btn btn-back" @click="closeDisplayNameModal">
                   Cancelar
                 </button>
                 <button
@@ -181,7 +181,7 @@
     </div>
 
     <!-- Change Password Modal -->
-    <div v-if="showPasswordModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div v-if="showPasswordModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);" @click.self="closePasswordModal">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -266,7 +266,7 @@ import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 
 const router = useRouter()
-const { authStore, handleSignOut } = useAuth()
+const { authStore, handleSignOut, handleUpdateDisplayName, handleUpdatePassword } = useAuth()
 
 // Modal state
 const showPasswordModal = ref(false)
@@ -313,29 +313,23 @@ const closePasswordModal = () => {
   authStore.clearError()
 }
 
+const closeDisplayNameModal = () => {
+  showDisplayNameModal.value = false
+  displayNameForm.value = {
+    displayName: ''
+  }
+  displayNameErrors.value = []
+  displayNameSuccess.value = false
+  authStore.clearError()
+}
+
 const handlePasswordChange = async () => {
   passwordErrors.value = []
   passwordSuccess.value = false
   authStore.clearError()
 
-  // Validation
-  if (!passwordForm.value.newPassword) {
-    passwordErrors.value.push('La nueva contraseña es requerida')
-    return
-  }
-
-  if (passwordForm.value.newPassword.length < 6) {
-    passwordErrors.value.push('La contraseña debe tener al menos 6 caracteres')
-    return
-  }
-
-  if (passwordForm.value.newPassword !== passwordForm.value.confirmPassword) {
-    passwordErrors.value.push('Las contraseñas no coinciden')
-    return
-  }
-
-  // Update password
-  const result = await authStore.updatePassword(passwordForm.value.newPassword)
+  // Use the composable's helper method
+  const result = await handleUpdatePassword(passwordForm.value.newPassword, passwordForm.value.confirmPassword)
 
   if (result.success) {
     passwordSuccess.value = true
@@ -346,18 +340,65 @@ const handlePasswordChange = async () => {
     setTimeout(() => {
       closePasswordModal()
     }, 2000)
+  } else {
+    passwordErrors.value = result.errors || ['Error al actualizar la contraseña']
+  }
+}
+
+const handleDisplayNameChange = async () => {
+  displayNameErrors.value = []
+  displayNameSuccess.value = false
+  authStore.clearError()
+
+  // Use the composable's helper method
+  const result = await handleUpdateDisplayName(displayNameForm.value.displayName)
+
+  if (result.success) {
+    displayNameSuccess.value = true
+    displayNameForm.value = {
+      displayName: ''
+    }
+    setTimeout(() => {
+      closeDisplayNameModal()
+    }, 2000)
+  } else {
+    displayNameErrors.value = result.errors || ['Error al actualizar el nombre de usuario']
   }
 }
 
 // Initialize
 onMounted(() => {
   authStore.clearError()
+  // Set current display name when component mounts
+  displayNameForm.value.displayName = authStore.userDisplayName || ''
 })
 </script>
 
 <style scoped>
+.btn-back {
+  background: #6c757d;
+  color: white;
+  border: none;
+}
+.btn-back:hover {
+  background: #5a6268;
+  color: white;
+}
+.btn-override:hover {
+  background: var(--electric-indigo);
+  color: white;
+}
+.btn-override {
+  background: var(--electric-indigo);
+  color: white;
+  border: none;
+}
 .btn-outline-override {
   color: var(--electric-indigo);
+  border-color: var(--electric-indigo);
+}
+.btn-secondary { /* --- IGNORE --- */
+  background: var(--electric-indigo);
   border-color: var(--electric-indigo);
 }
 .btn-outline-override:hover {

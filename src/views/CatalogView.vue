@@ -62,7 +62,7 @@
             <!-- Ordenamiento -->
             <div class="dropdown">
               <button
-                class="btn btn-outline-primary dropdown-toggle"
+                class="btn btn-details dropdown-toggle"
                 type="button"
                 data-bs-toggle="dropdown"
               >
@@ -226,6 +226,10 @@ const setSortBy = (field) => {
 </script>
 
 <style scoped>
+.btn-details {
+  border: var(--electric-indigo);
+  color: white;
+}
 /* Router link styling */
 a.text-decoration-none {
   color: inherit;

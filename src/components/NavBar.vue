@@ -303,6 +303,31 @@ onMounted(async () => {
   font-weight: 400;
   padding: 0.75rem 1rem;
   transition: all 0.3s ease;
+  border-radius: 6px;
+  margin: 0.25rem 0.25rem;
+  width: calc(100% - 0.5rem);
+}
+
+.dropdown-item:hover {
+  color: #4338CA !important;
+  background: linear-gradient(135deg, rgba(67, 56, 202, 0.1), rgba(99, 102, 241, 0.05)) !important;
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(67, 56, 202, 0.15);
+}
+
+.dropdown-item.text-danger {
+  color: #dc2626 !important;
+}
+
+.dropdown-item.text-danger:hover {
+  color: white !important;
+  background: linear-gradient(135deg, #dc2626, #ef4444) !important;
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+}
+
+.dropdown-item:active {
+  transform: translateX(1px);
 }
 
 .navbar-toggler {
@@ -310,9 +335,6 @@ onMounted(async () => {
   border-radius: 8px;
 }
 
-.navbar-toggler:focus {
-  box-shadow: 0 0 0 0.2rem rgba(67, 56, 202, 0.25);
-}
 
 .fw-500 {
   font-weight: 500;
